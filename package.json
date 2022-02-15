@@ -1,0 +1,23 @@
+{
+  "name": "combine-ws",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "nodemon test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Proxtx/combineWS.git"
+  },
+  "author": "Proxtx",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Proxtx/combineWS/issues"
+  },
+  "homepage": "https://github.com/Proxtx/combineWS#readme",
+  "dependencies": {
+    "@proxtx/combine": "^2.0.2"
+  }
+}
