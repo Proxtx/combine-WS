@@ -1,4 +1,4 @@
-import { WebSocket } from "./websocket.js";
+import { WebSocket } from "@proxtx/websocket";
 
 export class CombineHandler {
   ws;
