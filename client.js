@@ -1,6 +1,8 @@
+const jobIdLength = 5;
+
 export const serve = async (data, url) => {
   let w = new WebSocket(url);
-  w.onmessage(async (ev) => {
+  w.onmessage = async (ev) => {
     if (ev.data.substring(0, 10) == "combine-ts") {
       w.send(
         "combine-ac" +
@@ -10,5 +12,5 @@ export const serve = async (data, url) => {
           )
       );
     }
-  });
+  };
 };

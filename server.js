@@ -1,21 +1,27 @@
 import { WebSocket } from "@proxtx/websocket";
 
+const jobIdLength = 5;
+
 export class CombineHandler {
   ws;
   combineAwaiters = [];
   genModule;
-  jobIdLength = 5;
 
   constructor(server, genModule) {
     this.genModule = genModule;
     this.ws = new WebSocket(server);
+    this.ws.onConnect(async (socket) => {
+      for (let i of this.combineAwaiters) {
+        await i(socket);
+      }
+    });
   }
 
   onCombine = (module, callback) => {
-    this.combineAwaiters.push((socket) => {
+    this.combineAwaiters.push(async (socket) => {
       callback(
-        this.genModule(async (body) => {
-          const jobId = randomString(this.jobIdLength);
+        await this.genModule(async (body) => {
+          const jobId = randomString(jobIdLength);
           let resolve;
           let result;
           socket.onMessage((m) => {
@@ -28,6 +34,7 @@ export class CombineHandler {
           await new Promise((r) => {
             resolve = r;
           });
+          return result;
         }, module)
       );
     });
