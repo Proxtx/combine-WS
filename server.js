@@ -19,6 +19,9 @@ export class CombineHandler {
 
   onCombine = (module, callback) => {
     this.combineAwaiters.push(async (socket) => {
+      const id = randomString(jobIdLength);
+      socket.send("combine-id" + id);
+      socket.id = id;
       callback(
         await this.genModule(async (body) => {
           const jobId = randomString(jobIdLength);
@@ -35,7 +38,8 @@ export class CombineHandler {
             resolve = r;
           });
           return result;
-        }, module)
+        }, module),
+        socket
       );
     });
   };
