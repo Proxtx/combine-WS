@@ -12,7 +12,11 @@ export class CombineHandler {
     this.ws = new WebSocket(server);
     this.ws.onConnect(async (socket) => {
       for (let i of this.combineAwaiters) {
-        await i(socket);
+        try {
+          await i(socket);
+        } catch (e) {
+          console.log("combine-ws error:", e);
+        }
       }
     });
   }
