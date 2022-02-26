@@ -23,14 +23,23 @@ export class CombineHandler {
 
   onCombine = (module, callback) => {
     this.combineAwaiters.push(async (socket) => {
+      let connected = true;
+      socket.onDisconnect(() => {
+        connected = false;
+      });
       const id = randomString(jobIdLength);
       socket.send("combine-id" + id);
-      socket.id = id;
+      let additionalInfo = { socket, id, connected: true };
       callback(
         await this.genModule(async (body) => {
+          if (!connected) {
+            additionalInfo.connected = connected;
+            return { success: false, error: "disconnected", type: "ws" };
+          }
           const jobId = randomString(jobIdLength);
           let resolve;
           let result;
+          let resolved = false;
           socket.onMessage((m) => {
             if (m.substring(0, 10 + jobIdLength) == "combine-ac" + jobId) {
               result = JSON.parse(m.substring(10 + jobIdLength));
@@ -38,12 +47,19 @@ export class CombineHandler {
             }
           });
           socket.send("combine-ts" + jobId + JSON.stringify(body));
-          await new Promise((r) => {
+          await new Promise(async (r) => {
             resolve = r;
+            while (connected && !resolved) {
+              await new Promise((r) => setTimeout(r, 5000));
+            }
+            result = { success: false, error: "disconnected", type: "ws" };
+            additionalInfo.connected = connected;
+            r();
           });
+          resolved = true;
           return result;
         }, module),
-        socket
+        additionalInfo
       );
     });
   };
