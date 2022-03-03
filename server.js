@@ -30,37 +30,41 @@ export class CombineHandler {
       const id = randomString(jobIdLength);
       socket.send("combine-id" + id);
       let additionalInfo = { socket, id, connected: true };
-      callback(
-        await this.genModule(async (body) => {
-          if (!connected) {
-            additionalInfo.connected = connected;
-            return { success: false, error: "disconnected", type: "ws" };
-          }
-          const jobId = randomString(jobIdLength);
-          let resolve;
-          let result;
-          let resolved = false;
-          socket.onMessage((m) => {
-            if (m.substring(0, 10 + jobIdLength) == "combine-ac" + jobId) {
-              result = JSON.parse(m.substring(10 + jobIdLength));
-              resolve();
+      try {
+        callback(
+          await this.genModule(async (body) => {
+            if (!connected) {
+              additionalInfo.connected = connected;
+              return { success: false, error: "disconnected", type: "ws" };
             }
-          });
-          socket.send("combine-ts" + jobId + JSON.stringify(body));
-          await new Promise(async (r) => {
-            resolve = r;
-            while (connected && !resolved) {
-              await new Promise((r) => setTimeout(r, 5000));
-            }
-            result = { success: false, error: "disconnected", type: "ws" };
-            additionalInfo.connected = connected;
-            r();
-          });
-          resolved = true;
-          return result;
-        }, module),
-        additionalInfo
-      );
+            const jobId = randomString(jobIdLength);
+            let resolve;
+            let result;
+            let resolved = false;
+            socket.onMessage((m) => {
+              if (m.substring(0, 10 + jobIdLength) == "combine-ac" + jobId) {
+                result = JSON.parse(m.substring(10 + jobIdLength));
+                resolve();
+              }
+            });
+            socket.send("combine-ts" + jobId + JSON.stringify(body));
+            await new Promise(async (r) => {
+              resolve = r;
+              while (connected && !resolved) {
+                await new Promise((r) => setTimeout(r, 5000));
+              }
+              result = { success: false, error: "disconnected", type: "ws" };
+              additionalInfo.connected = connected;
+              r();
+            });
+            resolved = true;
+            return result;
+          }, module),
+          additionalInfo
+        );
+      } catch (e) {
+        console.log("Combine ws error loading a module. Ignored", module);
+      }
     });
   };
 }
