@@ -19,6 +19,6 @@
   "homepage": "https://github.com/Proxtx/combineWS#readme",
   "dependencies": {
     "@proxtx/combine": "^3.1.4",
-    "@proxtx/websocket": "^1.0.1"
+    "@proxtx/websocket": "^1.0.3"
   }
 }
