@@ -1,16 +1,16 @@
-import { WebSocket } from "@proxtx/websocket";
+import { WebSocketServer } from "ws";
 
 const jobIdLength = 5;
 
 export class CombineHandler {
-  ws;
+  wss;
   combineAwaiters = [];
   genModule;
 
   constructor(server, genModule) {
+    this.wss = new WebSocketServer({ noServer: true });
     this.genModule = genModule;
-    this.ws = new WebSocket(server);
-    this.ws.onConnect(async (socket) => {
+    this.wss.on("connection", async (socket) => {
       for (let i of this.combineAwaiters) {
         try {
           await i(socket);
@@ -19,12 +19,18 @@ export class CombineHandler {
         }
       }
     });
+
+    server.on("upgrade", (request, socket, head) => {
+      this.wss.handleUpgrade(request, socket, head, (ws) => {
+        this.wss.emit("connection", ws, request);
+      });
+    });
   }
 
   onCombine = (module, callback) => {
     this.combineAwaiters.push(async (socket) => {
       let connected = true;
-      socket.onDisconnect(() => {
+      socket.on("close", () => {
         connected = false;
       });
       const id = randomString(jobIdLength);
@@ -41,7 +47,8 @@ export class CombineHandler {
             let resolve;
             let result;
             let resolved = false;
-            socket.onMessage((m) => {
+            socket.on("message", (m) => {
+              m = m.toString();
               if (m.substring(0, 10 + jobIdLength) == "combine-ac" + jobId) {
                 result = JSON.parse(m.substring(10 + jobIdLength));
                 resolve();
