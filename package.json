@@ -19,6 +19,5 @@
   "homepage": "https://github.com/Proxtx/combineWS#readme",
   "dependencies": {
     "ws": "^8.5.0"
-    "@proxtx/combine": "^3.1.4",
   }
 }
