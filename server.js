@@ -1,4 +1,5 @@
 import { WebSocketServer } from "ws";
+import EventEmitter, { getEventListeners } from "events";
 
 const jobIdLength = 5;
 
@@ -29,6 +30,12 @@ export class CombineHandler {
 
   onCombine = (module, callback) => {
     this.combineAwaiters.push(async (socket) => {
+      let fixedEventEmitter = new EventEmitter();
+
+      socket.on("message", (m) => {
+        fixedEventEmitter.emit("message", m);
+      });
+
       let connected = true;
       socket.on("close", () => {
         connected = false;
@@ -47,13 +54,15 @@ export class CombineHandler {
             let resolve;
             let result;
             let resolved = false;
-            socket.on("message", (m) => {
+            let listener = (m) => {
               m = m.toString();
               if (m.substring(0, 10 + jobIdLength) == "combine-ac" + jobId) {
                 result = JSON.parse(m.substring(10 + jobIdLength));
+                resolved = true;
                 resolve();
               }
-            });
+            };
+            fixedEventEmitter.on("message", listener);
             socket.send("combine-ts" + jobId + JSON.stringify(body));
             await new Promise(async (r) => {
               resolve = r;
@@ -64,6 +73,7 @@ export class CombineHandler {
               additionalInfo.connected = connected;
               r();
             });
+            fixedEventEmitter.removeListener("message", listener);
             resolved = true;
             return result;
           }, module),
