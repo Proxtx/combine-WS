@@ -19,5 +19,5 @@ export const serve = async (data, url) => {
     }
   };
   await new Promise((resolve) => (r = resolve));
-  return id;
+  return { id, ws: w };
 };
